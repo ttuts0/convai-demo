@@ -70,6 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ------------------------------
+       SIMULATION TAB SWITCHING
+    ------------------------------ */
+    document.querySelectorAll('.sim-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sim-tab-panel').forEach(p => p.classList.add('sim-hidden'));
+            tab.classList.add('active');
+            document.getElementById('sim-panel-' + tab.dataset.tab).classList.remove('sim-hidden');
+        });
+    });
+
+    /* ------------------------------
        INIT 3D FEATURE CORRIDOR
     ------------------------------ */
     initFeaturesCorridor3D();
@@ -93,6 +105,8 @@ function initFeaturesCorridor3D() {
         antialias: true,
         alpha: true
     });
+    renderer.setClearColor(0x0f1c15, 0); // match --bg-gradient-start; 0 alpha = transparent
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
     camera.position.set(0, 1.4, 6);
@@ -103,22 +117,6 @@ function initFeaturesCorridor3D() {
     const keyLight = new THREE.SpotLight(0x4ade80, 1.5, 40, Math.PI/4, 0.5);
     keyLight.position.set(2, 6, 4);
     scene.add(keyLight);
-
-    /* GRID FLOOR */
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(20, 60, 40, 120),
-        new THREE.MeshStandardMaterial({
-            color: 0x020608,
-            metalness: 0.9,
-            roughness: 0.3,
-            emissive: 0x0f3a28,
-            emissiveIntensity: 0.6
-        })
-    );
-    floor.rotation.x = -Math.PI/2;
-    floor.position.z = -20;
-
-   
 
     /* PARTICLES */
     const positions = new Float32Array(220 * 3);
@@ -184,8 +182,8 @@ function initFeaturesCorridor3D() {
     /* RESIZE */
     function resizeRenderer() {
         const rect = canvas.getBoundingClientRect();
-        const w = rect.width || section.clientWidth;
-        const h = rect.height || window.innerHeight * 0.8;
+        const w = Math.max(rect.width || section.clientWidth, 1);
+        const h = Math.max(rect.height || window.innerHeight * 0.8, 1);
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
@@ -211,9 +209,33 @@ function initFeaturesCorridor3D() {
 
     /* ANIMATE */
     const clock = new THREE.Clock();
+    let animId = null;
+    let isVisible = false;
+
+    // Pause rendering when the section is off-screen — reduces GPU pressure
+    // and prevents WebGL context loss from sustained background load
+    const visibilityObserver = new IntersectionObserver(entries => {
+        isVisible = entries[0].isIntersecting;
+        if (isVisible && animId === null) animate();
+    }, { threshold: 0 });
+    visibilityObserver.observe(section);
+
+    // Recover cleanly if the browser drops the WebGL context
+    // (happens on tab switch, GPU memory pressure, hybrid graphics switch)
+    canvas.addEventListener('webglcontextlost', e => {
+        e.preventDefault();
+        cancelAnimationFrame(animId);
+        animId = null;
+    }, false);
+
+    canvas.addEventListener('webglcontextrestored', () => {
+        resizeRenderer();
+        if (isVisible) animate();
+    }, false);
 
     function animate() {
-        requestAnimationFrame(animate);
+        if (!isVisible) { animId = null; return; }
+        animId = requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
         /* CAMERA MOTION */
@@ -236,6 +258,4 @@ function initFeaturesCorridor3D() {
         updateActiveStep();
         renderer.render(scene, camera);
     }
-
-    animate();
 }
