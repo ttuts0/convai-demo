@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIAL | Career Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050a08;
+      --bg-mid: #0f1c15;
+      --green: #4ade80;
+      --green-hover: #22c55e;
+      --green-dim: rgba(74,222,128,0.08);
+      --green-border: rgba(74,222,128,0.22);
+      --white: #ffffff;
+      --gray: #9ca3af;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.08);
+      --font: 'Inter', sans-serif;
+      --display: 'Outfit', sans-serif;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); min-height: 100vh; overflow-x: hidden; }
+
+    .gradient-text {
+      background: linear-gradient(to right, #4ade80, #a7f3d0);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .grid-pattern {
+      background-image:
+        linear-gradient(rgba(74,222,128,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,222,128,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.5rem; border-radius: 100px;
+      font-family: var(--font); font-size: 0.95rem; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.25s ease; text-decoration: none;
+    }
+    .btn-hero { background: var(--green); color: #020617; font-weight: 600; }
+    .btn-hero:hover { background: var(--green-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,222,128,0.25); }
+    .btn-hero:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: var(--gray); }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.38); color: var(--white); transform: translateY(-2px); }
+    .btn-ghost { background: transparent; border: none; color: var(--gray); }
+    .btn-ghost:hover { color: var(--white); }
+    .btn-lg { padding: 1rem 2rem; font-size: 1rem; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes floatBounce { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-8px); } }
+    @keyframes tRingFly { 0%{transform:translate(-50%,-50%) scale(0.02);opacity:0} 8%{opacity:0.7} 88%{opacity:0.35} 100%{transform:translate(-50%,-50%) scale(20);opacity:0} }
+    @keyframes tCoreGlow { 0%,100%{box-shadow:0 0 18px 7px #4ade80,0 0 50px 20px rgba(74,222,128,0.4)} 50%{box-shadow:0 0 28px 12px #4ade80,0 0 80px 35px rgba(74,222,128,0.55)} }
+    @keyframes tTextIn { 0%{opacity:0;letter-spacing:0.1em} 25%{opacity:0.75;letter-spacing:0.28em} 78%{opacity:0.75} 100%{opacity:0} }
+    @keyframes tWarp { 0%,55%{opacity:0} 100%{opacity:1} }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Shared header */
+    .screen-header {
+      padding: 1.25rem 2rem; display: flex; align-items: center;
+      justify-content: space-between; border-bottom: 1px solid var(--glass-border);
+    }
+    .dial-logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--white); }
+    .dial-logo img { height: 26px; width: auto; filter: invert(1); opacity: 0.9; }
+    .dial-logo-text { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
+
+    /* Progress dots */
+    .progress-dots { display: flex; align-items: center; gap: 0.5rem; }
+    .progress-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--glass-border); transition: all 0.3s ease; }
+    .progress-dot.active { background: var(--green); transform: scale(1.3); }
+    .progress-dot.done { background: rgba(74,222,128,0.4); }
+
+    /* ── INTRO ── */
+    .intro-screen {
+      min-height: 100vh; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 2rem; text-align: center;
+    }
+    .intro-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 80% 55% at 50% 20%, rgba(74,222,128,0.09) 0%, transparent 65%);
+    }
+    .intro-logo-wrap { position: absolute; top: 1.5rem; left: 1.5rem; z-index: 2; }
+    .intro-content { position: relative; z-index: 2; max-width: 700px; animation: fadeInUp 0.6s ease forwards; }
+    .intro-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--green-dim); border: 1px solid var(--green-border);
+      color: var(--green); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem;
+    }
+    .intro-title {
+      font-family: var(--display); font-size: clamp(2.4rem, 7vw, 4.5rem);
+      font-weight: 700; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 1.5rem;
+    }
+    .intro-subtitle { font-size: 1.05rem; color: var(--gray); line-height: 1.65; max-width: 560px; margin: 0 auto 2.5rem; }
+    .intro-ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 4rem; }
+    .intro-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 2rem; max-width: 360px; margin: 0 auto; }
+    .stat-value { font-family: var(--display); font-size: 2rem; font-weight: 700; }
+    .stat-label { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.25rem; }
+    .scroll-ind { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); animation: floatBounce 2s ease infinite; }
+    .scroll-ind-ring { width: 24px; height: 40px; border-radius: 100px; border: 2px solid rgba(74,222,128,0.4); display: flex; justify-content: center; padding-top: 8px; }
+    .scroll-ind-dot { width: 4px; height: 8px; background: var(--green); border-radius: 100px; }
+
+    /* ── SCREENING ── */
+    .screening-screen { min-height: 100vh; display: flex; flex-direction: column; }
+    .screening-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .screening-content { width: 100%; max-width: 620px; animation: fadeInUp 0.4s ease forwards; }
+    .q-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--green); margin-bottom: 0.6rem; }
+    .q-text { font-family: var(--display); font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+    .q-hint { color: var(--gray); font-size: 0.88rem; margin-bottom: 2rem; }
+    .options-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; margin-bottom: 2rem; }
+    .opt-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1rem; background: var(--glass);
+      border: 1px solid var(--glass-border); border-radius: 12px;
+      cursor: pointer; transition: all 0.2s ease;
+      font-family: var(--font); font-size: 0.88rem; color: var(--gray); text-align: left;
+    }
+    .opt-pill:hover { border-color: rgba(74,222,128,0.3); color: var(--white); }
+    .opt-pill.selected { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.55); color: var(--green); }
+    .screening-actions { display: flex; justify-content: center; gap: 1rem; }
+
+    /* ── VOICE SELECT ── */
+    .voice-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.9rem; margin-bottom: 2rem; }
+    .voice-card {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 1rem 1.1rem; background: var(--glass);
+      border: 1px solid var(--glass-border); border-radius: 14px;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .voice-card:hover { border-color: rgba(74,222,128,0.3); }
+    .voice-card.selected { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.55); }
+    .voice-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+    .voice-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.1rem; }
+    .voice-desc { font-size: 0.76rem; color: var(--gray); }
+    .voice-check { width: 20px; height: 20px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0; transition: opacity 0.2s; }
+    .voice-card.selected .voice-check { opacity: 1; }
+    .voice-card-actions { display: flex; align-items: center; gap: 0.45rem; margin-left: auto; }
+    .voice-play-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.22); color: var(--green); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; }
+    .voice-play-btn:hover { background: rgba(74,222,128,0.18); }
+    .voice-play-btn.playing { background: rgba(74,222,128,0.18); border-color: rgba(74,222,128,0.55); animation: pulse 1.2s ease infinite; }
+
+    /* ── LIBRARY ── */
+    .library-main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; }
+    .library-heading { text-align: center; margin-bottom: 3rem; animation: fadeInUp 0.4s ease forwards; }
+    .library-title { font-family: var(--display); font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+    .library-subtitle { color: var(--gray); max-width: 540px; margin: 0 auto; font-size: 0.97rem; line-height: 1.6; }
+    .sim-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; margin-bottom: 3rem; }
+    .sim-card {
+      border-radius: 20px; overflow: hidden; border: 1px solid var(--glass-border);
+      cursor: pointer; transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.4s ease forwards;
+    }
+    .sim-card:hover { transform: translateY(-6px); border-color: rgba(74,222,128,0.25); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .sim-card-img { height: 175px; position: relative; display: flex; align-items: flex-end; padding: 1.1rem; }
+    .sim-category-badge {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.28rem 0.7rem; border-radius: 100px;
+      background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15);
+    }
+    .sim-card-body { padding: 1.2rem; background: rgba(10,20,14,0.85); }
+    .sim-card-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+    .sim-card-title { font-family: var(--display); font-size: 1.1rem; font-weight: 700; }
+    .sim-card-dur { font-size: 0.78rem; color: var(--gray); background: var(--glass); border: 1px solid var(--glass-border); padding: 0.18rem 0.55rem; border-radius: 100px; }
+    .sim-card-desc { font-size: 0.86rem; color: var(--gray); line-height: 1.5; margin-bottom: 1rem; }
+    .sim-card-btn {
+      width: 100%; padding: 0.62rem; background: rgba(74,222,128,0.09);
+      border: 1px solid rgba(74,222,128,0.22); border-radius: 10px;
+      color: var(--green); font-family: var(--font); font-size: 0.86rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .sim-card-btn:hover { background: rgba(74,222,128,0.17); border-color: rgba(74,222,128,0.45); }
+    .soon-wrap { text-align: center; }
+    .soon-pill {
+      display: inline-block; padding: 0.45rem 1.2rem;
+      background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.18);
+      border-radius: 100px; font-size: 0.78rem; color: var(--green);
+      font-family: var(--display); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px); z-index: 100;
+      display: flex; align-items: center; justify-content: center; padding: 2rem;
+      animation: fadeIn 0.2s ease forwards;
+    }
+    .modal-card { width: 100%; max-width: 500px; background: #0a1a10; border: 1px solid rgba(74,222,128,0.14); border-radius: 24px; overflow: hidden; }
+    .modal-img { height: 170px; position: relative; display: flex; align-items: flex-start; justify-content: flex-end; padding: 1rem; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.55);
+      border: none; color: var(--white); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(0,0,0,0.85); }
+    .modal-body { padding: 1.6rem; }
+    .modal-meta { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; font-size: 0.76rem; }
+    .modal-title { font-family: var(--display); font-size: 1.45rem; font-weight: 700; margin-bottom: 0.7rem; }
+    .modal-desc { color: var(--gray); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.4rem; }
+    .modal-start {
+      width: 100%; padding: 0.85rem; background: var(--green); border: none; border-radius: 12px;
+      color: #020617; font-family: var(--font); font-size: 0.97rem; font-weight: 700;
+      cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .modal-start:hover { background: var(--green-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,222,128,0.3); }
+
+    /* ── TUNNEL ── */
+    .tunnel-overlay { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .tunnel-glow-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(74,222,128,0.1) 0%, transparent 55%); }
+    .t-ring { position: absolute; top: 50%; left: 50%; width: 110px; height: 110px; border-radius: 50%; border: 1px solid rgba(74,222,128,0.6); animation: tRingFly 1.8s ease-in infinite; }
+    .t-line { position: absolute; top: 50%; left: 50%; height: 1px; width: 90vmax; background: linear-gradient(to right, rgba(74,222,128,0.35) 0%, transparent 70%); transform-origin: left center; transform: translateY(-50%) rotate(var(--angle)); }
+    .tunnel-core { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 18px 7px #4ade80, 0 0 50px 20px rgba(74,222,128,0.4); transform: translate(-50%,-50%); animation: tCoreGlow 0.9s ease-in-out infinite alternate; }
+    .tunnel-warp { position: absolute; inset: 0; background: radial-gradient(ellipse at center, #d1fae5, #fff); pointer-events: none; animation: tWarp 4s ease-in forwards; }
+    .tunnel-label { position: absolute; bottom: 28%; font-family: var(--display); font-size: 0.78rem; font-weight: 600; color: rgba(74,222,128,0.75); text-transform: uppercase; letter-spacing: 0.3em; animation: tTextIn 4s ease forwards; }
+
+    /* ── PREVIEW ── */
+    .preview-screen { min-height: 100vh; display: flex; flex-direction: column; }
+    .preview-header {
+      padding: 1.1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(5,10,8,0.85); backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .preview-sim-label { font-family: var(--display); font-size: 0.9rem; font-weight: 600; color: var(--green); }
+    .preview-main { flex: 1; max-width: 780px; margin: 0 auto; padding: 3rem 2rem; width: 100%; }
+    .scene-eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--green); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.4rem; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s ease infinite; }
+    .scene-text {
+      font-size: 1.02rem; line-height: 1.75; color: #d1fae5;
+      background: rgba(74,222,128,0.04); border: 1px solid rgba(74,222,128,0.1);
+      border-radius: 16px; padding: 1.4rem; margin-bottom: 2rem;
+      animation: fadeInUp 0.4s ease forwards;
+    }
+    .choices-label { font-size: 0.82rem; color: var(--gray); margin-bottom: 0.85rem; font-weight: 500; }
+    .choices-list { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.75rem; }
+    .choice-btn {
+      display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.9rem 1.1rem;
+      background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px;
+      cursor: pointer; transition: all 0.2s ease; text-align: left;
+      font-family: var(--font); color: var(--white); font-size: 0.9rem; line-height: 1.5;
+    }
+    .choice-btn:hover { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.05); transform: translateX(4px); }
+    .choice-btn.selected { border-color: rgba(74,222,128,0.65); background: rgba(74,222,128,0.08); }
+    .choice-letter {
+      width: 27px; height: 27px; border-radius: 50%; background: var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.76rem; font-weight: 700; flex-shrink: 0; transition: all 0.2s;
+    }
+    .choice-btn.selected .choice-letter { background: var(--green); color: #020617; }
+    .result-box {
+      background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.15);
+      border-radius: 14px; padding: 1.15rem; margin-bottom: 1.5rem;
+      font-size: 0.93rem; color: #d1fae5; line-height: 1.65; animation: fadeInUp 0.35s ease forwards;
+    }
+    .followup-box {
+      background: rgba(15,28,21,0.65); border: 1px solid rgba(74,222,128,0.18);
+      border-radius: 16px; padding: 1.4rem; margin-bottom: 2rem;
+      font-size: 0.93rem; color: #d1fae5; line-height: 1.75; animation: fadeInUp 0.35s ease forwards;
+    }
+    .complete-badge {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      background: rgba(74,222,128,0.11); border: 1px solid rgba(74,222,128,0.28);
+      color: var(--green); font-size: 0.76rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.38rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem;
+    }
+    .preview-actions { display: flex; justify-content: center; gap: 1rem; }
+
+    @media (max-width: 640px) {
+      .options-grid { grid-template-columns: repeat(2,1fr); }
+      .sim-grid { grid-template-columns: 1fr; }
+      .voice-grid { grid-template-columns: 1fr; }
+      .intro-stats { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ── DATA ──
+const simulations = [
+  {
+    id: "healthcare",
+    title: "Surgical Assistant",
+    category: "Healthcare",
+    duration: "18 min",
+    gradient: "linear-gradient(135deg,#0c4a6e,#065f46)",
+    catColor: "#22d3ee",
+    description: "Experience a day in the operating room as a surgical assistant. Learn about precision, teamwork, and life-saving procedures."
+  },
+  {
+    id: "technology",
+    title: "Data Engineer",
+    category: "Technology",
+    duration: "15 min",
+    gradient: "linear-gradient(135deg,#1e1b4b,#312e81)",
+    catColor: "#a78bfa",
+    description: "Step into the role of an AI engineer developing cutting-edge machine learning solutions for real-world problems."
+  },
+  {
+    id: "business",
+    title: "FinTech Analyst",
+    category: "Business",
+    duration: "12 min",
+    gradient: "linear-gradient(135deg,#431407,#78350f)",
+    catColor: "#fbbf24",
+    description: "Navigate the fast-paced world of financial technology, analyzing market trends and making data-driven decisions."
+  },
+  {
+    id: "energy",
+    title: "Renewable Energy Engineer",
+    category: "Energy",
+    duration: "16 min",
+    gradient: "linear-gradient(135deg,#14532d,#1a3a1a)",
+    catColor: "#4ade80",
+    description: "Design and optimize sustainable energy systems that power the future while protecting our planet."
+  },
+];
+
+const voices = [
+  { id: "nova",    name: "Nova",    desc: "Warm & Conversational",   color: "#4ade80", init: "N" },
+  { id: "echo",    name: "Echo",    desc: "Clear & Professional",    color: "#38bdf8", init: "E" },
+  { id: "alloy",   name: "Alloy",   desc: "Balanced & Neutral",      color: "#a78bfa", init: "A" },
+  { id: "shimmer", name: "Shimmer", desc: "Energetic & Bright",      color: "#fbbf24", init: "S" },
+  { id: "onyx",    name: "Onyx",    desc: "Deep & Authoritative",    color: "#f87171", init: "O" },
+  { id: "fable",   name: "Fable",   desc: "Storytelling & Engaging", color: "#fb923c", init: "F" },
+];
+
+const skillOpts = [
+  { id:"analytical",     label:"Analytical",     icon:"trending"  },
+  { id:"creative",       label:"Creative",       icon:"lightbulb" },
+  { id:"technical",      label:"Technical",      icon:"code"      },
+  { id:"leadership",     label:"Leadership",     icon:"users"     },
+  { id:"communication",  label:"Communication",  icon:"brief"     },
+  { id:"problem-solving",label:"Problem Solving",icon:"rocket"    },
+];
+const expOpts = [
+  { id:"student",       label:"Student",       icon:"grad"    },
+  { id:"entry",         label:"Entry Level",   icon:"rocket"  },
+  { id:"mid",           label:"Mid Career",    icon:"brief"   },
+  { id:"senior",        label:"Senior",        icon:"trending"},
+  { id:"career-change", label:"Career Change", icon:"lightbulb"},
+  { id:"exploring",     label:"Just Exploring",icon:"users"   },
+];
+const interestOpts = [
+  { id:"healthcare",  label:"Healthcare",  icon:"heart"   },
+  { id:"technology",  label:"Technology",  icon:"code"    },
+  { id:"business",    label:"Business",    icon:"brief"   },
+  { id:"energy",      label:"Energy",      icon:"zap"     },
+  { id:"education",   label:"Education",   icon:"grad"    },
+  { id:"engineering", label:"Engineering", icon:"rocket"  },
+];
+
+// ── ICONS ──
+const I = {
+  arrow:   `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`,
+  brief:   `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+  code:    `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+  heart:   `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  zap:     `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>`,
+  grad:    `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+  trending:`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+  lightbulb:`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+  users:   `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  rocket:  `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+  x:       `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+  check:   `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  play:    `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+  star:    `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  speaker: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
+  stopSq:  `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`,
+};
+
+// ── STATE ──
+const state = {
+  screen: 'intro',       // intro | screening | voice | library | preview
+  step: 0,
+  skills: [], exp: [], interests: [],
+  voice: 'nova',
+  playingVoice: null,
+  sim: null,
+  modalOpen: false,
+  tunnelActive: false,
+  choice: null,
+  showResult: false,
+  complete: false,
+};
+function set(patch) { Object.assign(state, patch); render(); }
+function update(patch) { Object.assign(state, patch); } // update state without re-rendering
+
+// ── HELPERS ──
+function logo() {
+  return `<div class="dial-logo">
+    <img src="logo.png" alt="DIAL" onerror="this.style.display='none'">
+    <span class="dial-logo-text">DIAL</span>
+  </div>`;
+}
+function dots(cur, total) {
+  return `<div class="progress-dots">${Array.from({length:total},(_,i)=>`<div class="progress-dot ${i<cur?'done':i===cur?'active':''}"></div>`).join('')}</div>`;
+}
+function pill(opt, sel) {
+  const on = sel.includes(opt.id);
+  return `<button class="opt-pill${on?' selected':''}" data-a="toggle" data-id="${opt.id}">${I[opt.icon]||''}${opt.label}</button>`;
+}
+
+// ── SCREENS ──
+function introHTML() {
+  return `<div class="intro-screen grid-pattern">
+    <div class="intro-bg"></div>
+    <div class="intro-logo-wrap">${logo()}</div>
+    <div class="intro-content">
+      <div class="intro-badge">${I.star} AI-Powered Career Simulation</div>
+      <h1 class="intro-title">Your Career Story<br><span class="gradient-text">Starts Here</span></h1>
+      <p class="intro-subtitle">Experience the future of career exploration through AI-powered immersive simulations. Discover your path in healthcare, technology, business, and more.</p>
+      <div class="intro-ctas">
+        <button class="btn btn-hero btn-lg" data-a="toScreening">Begin Your Journey ${I.arrow}</button>
+        <button class="btn btn-outline btn-lg" data-a="toLibrary">Explore Simulations</button>
+      </div>
+      <div class="intro-stats">
+        <div><div class="stat-value gradient-text">78M</div><div class="stat-label">New Jobs by 2030</div></div>
+        <div><div class="stat-value gradient-text">4+</div><div class="stat-label">Career Fields</div></div>
+        <div><div class="stat-value gradient-text">&lt;20</div><div class="stat-label">Min Sessions</div></div>
+      </div>
+    </div>
+    <div class="scroll-ind"><div class="scroll-ind-ring"><div class="scroll-ind-dot"></div></div></div>
+  </div>`;
+}
+
+function screeningHTML() {
+  const qs = [
+    { label:"Step 1 of 3", text:"What are your strongest skills?",  hint:"Select all that apply", opts:skillOpts,    sel:state.skills,    multi:true },
+    { label:"Step 2 of 3", text:"What's your experience level?",    hint:"Select one",            opts:expOpts,      sel:state.exp,       multi:false },
+    { label:"Step 3 of 3", text:"Which fields interest you?",       hint:"Select all that apply", opts:interestOpts, sel:state.interests, multi:true },
+  ];
+  const q = qs[state.step];
+  const ok = q.sel.length > 0;
+  return `<div class="screening-screen">
+    <header class="screen-header">${logo()}${dots(state.step,3)}</header>
+    <main class="screening-main"><div class="screening-content">
+      <p class="q-label">${q.label}</p>
+      <h2 class="q-text">${q.text}</h2>
+      <p class="q-hint">${q.hint}</p>
+      <div class="options-grid">${q.opts.map(o=>pill(o,q.sel)).join('')}</div>
+      <div class="screening-actions">
+        ${state.step>0?`<button class="btn btn-ghost" data-a="stepBack">Back</button>`:''}
+        <button class="btn btn-hero" data-a="stepNext" ${ok?'':'disabled'}>
+          ${state.step===2?'Choose Your AI Voice':'Continue'} ${I.arrow}
+        </button>
+      </div>
+    </div></main>
+  </div>`;
+}
+
+function voiceHTML() {
+  return `<div class="screening-screen">
+    <header class="screen-header">${logo()}<span style="font-size:.76rem;color:var(--gray);font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;">Personalization</span></header>
+    <main class="screening-main"><div class="screening-content">
+      <p class="q-label">Your AI Guide</p>
+      <h2 class="q-text">Choose Your AI Voice</h2>
+      <p class="q-hint" style="margin-bottom:1.6rem;">Select the voice that will accompany you through your simulation</p>
+      <div class="voice-grid">
+        ${voices.map(v=>`<div class="voice-card${state.voice===v.id?' selected':''}" data-a="setVoice" data-id="${v.id}">
+          <div class="voice-avatar" style="background:${v.color}22;color:${v.color};">${v.init}</div>
+          <div><div class="voice-name">${v.name}</div><div class="voice-desc">${v.desc}</div></div>
+          <div class="voice-card-actions">
+            <button class="voice-play-btn${state.playingVoice===v.id?' playing':''}" data-a="previewVoice" data-id="${v.id}" title="Preview voice">${state.playingVoice===v.id?I.stopSq:I.speaker}</button>
+            <div class="voice-check">${I.check}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="screening-actions">
+        <button class="btn btn-ghost" data-a="voiceBack">Back</button>
+        <button class="btn btn-hero" data-a="toLibrary">Explore Simulations ${I.arrow}</button>
+      </div>
+    </div></main>
+  </div>`;
+}
+
+function libraryHTML() {
+  return `<div>
+    <header class="screen-header">
+      ${logo()}
+      <nav style="display:flex;align-items:center;gap:1.4rem;">
+        <span style="font-size:.76rem;color:var(--green);font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;">Library</span>
+        <button class="btn btn-ghost" data-a="toIntro" style="font-size:.84rem;">Home</button>
+      </nav>
+    </header>
+    <div class="library-main">
+      <div class="library-heading">
+        <h1 class="library-title">Simulation Library</h1>
+        <p class="library-subtitle">Explore immersive career experiences across multiple fields. Each simulation gives you a realistic preview of future career paths.</p>
+      </div>
+      <div class="sim-grid">
+        ${simulations.map((s,i)=>`<div class="sim-card" data-a="openModal" data-id="${s.id}" style="animation-delay:${i*.1}s;">
+          <div class="sim-card-img" style="background:${s.gradient};">
+            <span class="sim-category-badge" style="color:${s.catColor};">${s.category}</span>
+          </div>
+          <div class="sim-card-body">
+            <div class="sim-card-row">
+              <h3 class="sim-card-title">${s.title}</h3>
+              <span class="sim-card-dur">${s.duration}</span>
+            </div>
+            <p class="sim-card-desc">${s.description}</p>
+            <button class="sim-card-btn">${I.play} Dial Me Up</button>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="soon-wrap"><span class="soon-pill">More simulations coming soon</span></div>
+    </div>
+    ${state.modalOpen && state.sim ? modalHTML() : ''}
+    ${state.tunnelActive ? tunnelHTML() : ''}
+  </div>`;
+}
+
+function modalHTML() {
+  const s = state.sim;
+  return `<div class="modal-overlay" data-a="overlayClick">
+    <div class="modal-card">
+      <div class="modal-img" style="background:${s.gradient};">
+        <button class="modal-close" data-a="closeModal">${I.x}</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta">
+          <span style="font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${s.catColor};">${s.category}</span>
+          <span style="color:var(--gray);">· ${s.duration}</span>
+        </div>
+        <h2 class="modal-title">${s.title}</h2>
+        <p class="modal-desc">${s.description}</p>
+        <button class="modal-start" data-a="startTunnel">Dial Me Up: ${s.title} ${I.arrow}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function tunnelHTML() {
+  // Rings flying toward you from a vanishing point — looping continuously
+  const ringCount = 8;
+  const period = 1.8;
+  const rings = Array.from({length: ringCount}, (_, i) => {
+    const delay = -(i * (period / ringCount)).toFixed(3) + 's';
+    return `<div class="t-ring" style="animation-delay:${delay};"></div>`;
+  }).join('');
+
+  // Perspective lines radiating from center — give depth like tunnel walls
+  const lineAngles = ['-45deg','45deg','135deg','-135deg','0deg','90deg','180deg','-90deg'];
+  const lines = lineAngles.map(a => `<div class="t-line" style="--angle:${a};"></div>`).join('');
+
+  return `<div class="tunnel-overlay">
+    <div class="tunnel-glow-bg"></div>
+    ${lines}
+    ${rings}
+    <div class="tunnel-core"></div>
+    <div class="tunnel-label">Dialing You In</div>
+    <div class="tunnel-warp"></div>
+  </div>`;
+}
+
+function previewHTML() {
+  const s = state.sim;
+  if (!s) return '';
+  const sc = s.scenario;
+
+  let body = '';
+  if (!state.showResult) {
+    body = `<p class="choices-label">How do you respond?</p>
+      <div class="choices-list">
+        ${sc.choices.map(c=>`<button class="choice-btn${state.choice===c.id?' selected':''}" data-a="pick" data-id="${c.id}">
+          <span class="choice-letter">${c.id.toUpperCase()}</span>
+          <span>${c.text}</span>
+        </button>`).join('')}
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-hero" data-a="confirm" ${state.choice?'':'disabled'}>Confirm Decision ${I.arrow}</button>
+      </div>`;
+  } else if (!state.complete) {
+    body = `<div class="result-box"><strong style="color:var(--green);display:block;margin-bottom:.45rem;">Result:</strong>${sc.results[state.choice]}</div>
+      <div class="preview-actions"><button class="btn btn-hero" data-a="conclude">Continue ${I.arrow}</button></div>`;
+  } else {
+    body = `<div class="followup-box"><strong style="color:var(--green);display:block;margin-bottom:.6rem;">Simulation Complete</strong>${sc.followUp}</div>
+      <div style="margin-bottom:1.5rem;"><span class="complete-badge">${I.star} Simulation Complete</span></div>
+      <div class="preview-actions">
+        <button class="btn btn-outline" data-a="toLibrary">Explore More</button>
+        <button class="btn btn-hero" data-a="toWaitlist">Join Waitlist ${I.arrow}</button>
+      </div>`;
+  }
+
+  return `<div class="preview-screen">
+    <header class="preview-header">
+      <div style="display:flex;align-items:center;gap:.9rem;">
+        ${logo()}
+        <span style="color:var(--glass-border);">·</span>
+        <span class="preview-sim-label">${s.title}</span>
+      </div>
+      <button class="btn btn-ghost" data-a="toLibrary" style="font-size:.84rem;">${I.x} Exit</button>
+    </header>
+    <main class="preview-main">
+      <p class="scene-eyebrow"><span class="live-dot"></span>Live Simulation · ${s.category}</p>
+      <div class="scene-text">${sc.scene}</div>
+      ${body}
+    </main>
+  </div>`;
+}
+
+// ── RENDER ──
+function render() {
+  const app = document.getElementById('app');
+  switch (state.screen) {
+    case 'intro':     app.innerHTML = introHTML();     break;
+    case 'screening': app.innerHTML = screeningHTML(); break;
+    case 'voice':     app.innerHTML = voiceHTML();     break;
+    case 'library':   app.innerHTML = libraryHTML();   break;
+    case 'preview':   app.innerHTML = previewHTML();   break;
+  }
+}
+
+// ── EVENTS ──
+document.addEventListener('click', e => {
+  // Close modal when clicking the dark overlay (not the card itself)
+  if (e.target.classList.contains('modal-overlay')) {
+    set({ modalOpen: false, sim: null });
+    return;
+  }
+
+  const el = e.target.closest('[data-a]');
+  if (!el) return;
+  const a = el.dataset.a;
+  const id = el.dataset.id;
+
+  switch (a) {
+    case 'toScreening': set({ screen:'screening', step:0 }); break;
+    case 'toLibrary':   speechSynthesis.cancel(); set({ screen:'library', modalOpen:false, tunnelActive:false, playingVoice:null }); break;
+    case 'toIntro':     set({ screen:'intro' }); break;
+    case 'toWaitlist':  window.location.href = 'index.html#waitlist'; break;
+
+    case 'stepNext':
+      if (state.step < 2) set({ step: state.step+1 });
+      else set({ screen:'voice' });
+      break;
+    case 'stepBack': set({ step: state.step-1 }); break;
+    case 'voiceBack': set({ screen:'screening', step:2 }); break;
+
+    case 'toggle': {
+      if (state.step === 1) {
+        // single-select: remove selected from all, add to clicked
+        update({ exp: [id] });
+        document.querySelectorAll('.opt-pill').forEach(p => p.classList.remove('selected'));
+        el.classList.add('selected');
+      } else {
+        const key = state.step === 0 ? 'skills' : 'interests';
+        const arr = state[key].includes(id) ? state[key].filter(x=>x!==id) : [...state[key], id];
+        update({ [key]: arr });
+        el.classList.toggle('selected', arr.includes(id));
+      }
+      // update Continue button disabled state
+      const nextBtn = document.querySelector('[data-a="stepNext"]');
+      if (nextBtn) nextBtn.disabled = [state.skills, state.exp, state.interests][state.step].length === 0;
+      break;
+    }
+
+    case 'setVoice': {
+      update({ voice: id });
+      document.querySelectorAll('.voice-card').forEach(c => c.classList.toggle('selected', c.dataset.id === id));
+      break;
+    }
+
+    case 'previewVoice': {
+      e.stopPropagation(); // prevent click bubbling to setVoice
+      const resetBtn = (btn) => { btn.classList.remove('playing'); btn.innerHTML = I.speaker; };
+      if (state.playingVoice === id) {
+        speechSynthesis.cancel();
+        update({ playingVoice: null });
+        resetBtn(el);
+      } else {
+        speechSynthesis.cancel();
+        document.querySelectorAll('.voice-play-btn').forEach(resetBtn);
+        const vData = voices.find(v => v.id === id);
+        const u = new SpeechSynthesisUtterance(`Hi, I'm ${vData.name}.`);
+
+        const voicePrefs = {
+          nova:    { keywords:['Jenny','Aria','Zira','Google US English','Samantha','Karen'],    pitch:1.1,  rate:0.95 },
+          echo:    { keywords:['Guy','David','Mark','Google UK English Male','Daniel','Alex'],   pitch:1.0,  rate:1.02 },
+          alloy:   { keywords:['Ana','Emma','Google US English','Moira','Victoria'],             pitch:1.0,  rate:0.98 },
+          shimmer: { keywords:['Michelle','Sonia','Google UK English Female','Tessa','Veena'],  pitch:1.2,  rate:1.08 },
+          onyx:    { keywords:['James','Thomas','Google UK English Male','Fred','Lee'],          pitch:0.75, rate:0.88 },
+          fable:   { keywords:['Natasha','Rishi','Fiona','Google UK English Female','Nicky'],   pitch:1.05, rate:0.97 },
+        };
+        const pref = voicePrefs[id] || { keywords:[], pitch:1, rate:1 };
+        const available = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+        let picked = null;
+        for (const kw of pref.keywords) { picked = available.find(v => v.name.includes(kw)); if (picked) break; }
+        if (!picked && available.length) { const idx = ['nova','echo','alloy','shimmer','onyx','fable'].indexOf(id); picked = available[idx % available.length]; }
+        if (picked) u.voice = picked;
+        u.pitch = pref.pitch;
+        u.rate  = pref.rate;
+        u.onend  = () => { update({ playingVoice: null }); resetBtn(el); };
+        u.onerror = () => { update({ playingVoice: null }); resetBtn(el); };
+        speechSynthesis.speak(u);
+        update({ playingVoice: id });
+        el.classList.add('playing');
+        el.innerHTML = I.stopSq;
+      }
+      break;
+    }
+
+    case 'openModal': {
+      const sim = simulations.find(s => s.id === id);
+      set({ modalOpen: true, sim });
+      break;
+    }
+    case 'closeModal': set({ modalOpen:false, sim:null }); break;
+    case 'overlayClick': break; // handled above via classList check
+
+    case 'startTunnel':
+      set({ tunnelActive:true, modalOpen:false });
+      setTimeout(() => {
+        if (state.sim && state.sim.id === 'healthcare') {
+          window.location.href = 'https://x.convai.com/?xpid=6085727f-aae0-4910-827f-cf3ac70e97ef&type=unlisted';
+        } else {
+          set({ tunnelActive:false, screen:'preview', choice:null, showResult:false, complete:false });
+        }
+      }, 4000);
+      break;
+
+    case 'pick':    set({ choice: id }); break;
+    case 'confirm': if (state.choice) set({ showResult:true }); break;
+    case 'conclude': set({ complete:true }); break;
+  }
+});
+
+render();
+</script>
+</body>
+</html>
